@@ -29,8 +29,13 @@
 #define ROW2P3 A14
 #define ROW2P4 A15
 
+#define PIN_COINSLOT 18
+#define DUMMY_OUT 52
+
 char keyInput_;
 String strSelectedPC_ = "";
+volatile bool isTransition = false;
+volatile byte coinInserted = 0;
 
 enum state_enum { ST_INIT, ST_INPUT, ST_COINSLOT, ST_OUTPUT };
 typedef byte STATE;
