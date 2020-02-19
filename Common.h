@@ -57,6 +57,13 @@ Keypad keypad = Keypad ( makeKeymap(keys), rowPins, colPins, ROWS, COLUMN);
 Settings setting = Settings();
 Entity entity =  Entity();
 
+// -------------------------------------------------------------------------
+// Function name:				setDisplay
+// Function description: 		Display the text on center 
+// Input:						message
+// Input:						row
+// type:						void
+// -------------------------------------------------------------------------
 void setDisplay(char* message, int row){
   // Compute the centerpoint of display in Row1
   
