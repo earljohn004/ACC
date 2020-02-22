@@ -1,7 +1,7 @@
 PROJECT_DIR       = ~/CentralizedCoinSlot
 BOARD_TAG    = mega2560
 #USER_LIB_PATH    =  $(PROJECT_DIR)/lib
-ARDUINO_LIBS = ArduinoThread LiquidCrystal_I2C millisDelay Wire Keypad
+ARDUINO_LIBS = ArduinoThread LiquidCrystal_I2C millisDelay Wire Keypad SimpleTimer
 MONITOR_PORT = /dev/ttyS4
 
 

@@ -14,6 +14,7 @@ void display_OutputState(){
       setDisplay(MSG_NORMAL_OUTPUTSTATE_TOTAL,LCDROW1);
       setDisplay( String( String(MSG_NORMAL_OUTPUTSTATE_PHP) + coinInserted ),LCDROW2);
 	  isenable_OutputState[ENABLE_INDEX] = true;
+	  // coin_insert_timeout.restartTimer( coin_insert_timeout_id_ );
     }
 }
 #endif

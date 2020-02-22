@@ -1,3 +1,12 @@
+// Project TipidBox
+//
+// Project Name:			Centralized Coinslot 
+// Author:					Earl John P. Abaquita
+// File name:				Common.h 
+// Version:					0.1
+// Description:				Contains all the definitions and helper functions
+//
+// Copyright Abaquitronics 2020
 #ifndef Common_h
 #define Common_h
 
@@ -7,6 +16,7 @@
 #include "Entity.h"
 #include <WString.h>
 
+// LCD related definitions 
 #define ROWS	4
 #define COLUMN  4
 
@@ -14,8 +24,10 @@
 #define LCDROW1 0
 #define LCDROW2 1
 
+// Keypad related definitions 
 #define ENABLE_INDEX 0
 #define KEY_ACCEPT '#'
+#define KEY_MAINTENANCE '*'
 
 // Keypad defines ROW Pins
 #define ROW1P1 A8
@@ -29,34 +41,98 @@
 #define ROW2P3 A14
 #define ROW2P4 A15
 
+// COINSLOT related definitions 
 #define PIN_COINSLOT 18
 #define DUMMY_OUT 52
 
-char keyInput_;
-String strSelectedPC_ = "";
-volatile bool isTransition = false;
-volatile byte coinInserted = 0;
+// DELAY and TRANSITIONS
+#define SERIAL_BAUD 115200
+#define THREAD_INTERVAL_INPUT 50
+#define THREAD_INTERVAL_STM 50
+#define OUTPUT_DELAY 50
 
-enum state_enum { ST_INIT, ST_INPUT, ST_COINSLOT, ST_OUTPUT };
-typedef byte STATE;
-STATE state = ST_INIT;
 
-const char keys [ROWS] [COLUMN] = {
-  {'1', '2', '3', 'A'},
-  {'4', '5', '6', 'B'},
-  {'7', '8', '9', 'C'},
-  {'*', '0', '#', 'D'},
-};
+// --------------------------------------------------------------
+// GPIO RELATED FUNCTIONS
+// START
+	bool isAccept = false;
+	int input_pins[] = { PIN_COINSLOT };
+	int output_pins[] = { DUMMY_OUT, 53, 51, 49, 47, 45, 43, 41, 39 };
+//  END
+// --------------------------------------------------------------
+//
 
-const byte rowPins[ROWS]	= {ROW1P1, ROW1P2, ROW1P3, ROW1P4};
-const byte colPins[COLUMN]	= {ROW2P1, ROW2P2, ROW2P3, ROW2P4};
+// --------------------------------------------------------------
+// VARIABLES FOR STATE MACHINE
+// START
+	enum state_enum { ST_INIT, ST_INPUT, ST_COINSLOT, ST_OUTPUT };
+	typedef byte STATE;
+	STATE state = ST_INIT;
+//  END
+// --------------------------------------------------------------
 
-//TODO: transferredfrom .ino file to header file for readability
-LiquidCrystal_I2C lcd (0x27, 20, 4); // LCD address to 0x27: 16 chars 2 rows
-Keypad keypad = Keypad ( makeKeymap(keys), rowPins, colPins, ROWS, COLUMN);
-Settings setting = Settings();
-Entity entity =  Entity();
 
+// --------------------------------------------------------------
+// VARIABLES for KEYPAD
+// START
+	char keyInput_;
+	String strSelectedPC_ = "";
+
+	const char keys [ROWS] [COLUMN] = {
+	  {'1', '2', '3', 'A'},
+	  {'4', '5', '6', 'B'},
+	  {'7', '8', '9', 'C'},
+	  {'*', '0', '#', 'D'},
+	};
+
+	const byte rowPins[ROWS]	= {ROW1P1, ROW1P2, ROW1P3, ROW1P4};
+	const byte colPins[COLUMN]	= {ROW2P1, ROW2P2, ROW2P3, ROW2P4};
+//  END
+// --------------------------------------------------------------
+
+
+// --------------------------------------------------------------
+// LIBRARIES INSTANTIATION and VARIABLES
+// START
+	LiquidCrystal_I2C lcd (0x27, 20, 4); // LCD address to 0x27: 16 chars 2 rows
+	Keypad keypad = Keypad ( makeKeymap(keys), rowPins, colPins, ROWS, COLUMN);
+	SimpleTimer time_out;
+	SimpleTimer coin_insert_timeout;
+	int time_out_id_;
+	int coin_insert_timeout_id_;
+	volatile bool isTransition = false;
+	volatile byte coinInserted = 0;
+//  END
+// --------------------------------------------------------------
+
+// --------------------------------------------------------------
+// MODEL INSTANTIATION and VARIABLES
+// START
+	Settings setting = Settings();
+	Entity entity =  Entity();
+//  END
+// --------------------------------------------------------------
+
+// --------------------------------------------------------------
+// Thread related Instantiation
+// START
+	Thread displayInitThread = Thread();
+	Thread stateThread = Thread();
+	Thread inputThread = Thread();
+	ThreadController control = ThreadController();
+//  END
+// --------------------------------------------------------------
+
+
+// --------------------------------------------------------------
+// Helper Functions
+// -------------------------------------------------------------------------
+// Function name:				setDisplay
+// Function description: 		set text display centered on the LCD Module
+// Input:						message (char*)
+// Input:						row (int*)
+// return type:					void
+// -------------------------------------------------------------------------
 void setDisplay(char* message, int row){
   // Compute the centerpoint of display in Row1
   
@@ -65,6 +141,13 @@ void setDisplay(char* message, int row){
   lcd.print(message);
 }
 
+// -------------------------------------------------------------------------
+// Function name:				setDisplay
+// Function description: 		set text display centered on the LCD Module
+// Input:						message (String)
+// Input:						row (int*)
+// return type:					void
+// -------------------------------------------------------------------------
 void setDisplay(String message, int row){
   // Compute the centerpoint of display in Row1
   
@@ -73,6 +156,12 @@ void setDisplay(String message, int row){
   lcd.print(message);
 }
 
+// -------------------------------------------------------------------------
+// Function name:				getStringInput
+// Function description: 		concatenate the string on key Input
+// Input:						N/A
+// return type:					void
+// -------------------------------------------------------------------------
 void getStringInput(){
 	//Concatenate string when key pressed is not "#"
 	if(keyInput_!= KEY_ACCEPT){
@@ -83,6 +172,45 @@ void getStringInput(){
 			strSelectedPC_ = String(keyInput_);
 		}
 	}else {/* Do nothing */}
+}
+
+// -------------------------------------------------------------------------
+// Function name:				initialize_outputs
+// Function description: 		initialize the output pins
+// Input:						N/A
+// return type:					void
+// -------------------------------------------------------------------------
+void initialize_outputs(){
+	int length = (sizeof(output_pins)/sizeof(output_pins[0]));
+	for(int x=0; x<length; x++){
+		pinMode(output_pins[x], OUTPUT);
+		digitalWrite(output_pins[x], HIGH);
+	}
+}
+
+// -------------------------------------------------------------------------
+// Function name:				getKeypadInput
+// Function description: 		get the keypad input run using thread
+// Input:						N/A
+// return type:					void
+// -------------------------------------------------------------------------
+void getKeypadInput(){
+  keyInput_ = keypad.getKey();
+}
+
+// -------------------------------------------------------------------------
+// Function name:				outputToPC
+// Function description: 		this function sends signal to the corresponding PC
+// Input:						N/A
+// return type:					void
+// -------------------------------------------------------------------------
+void outputToPC(){
+	detachInterrupt( INT5 );
+	coin_insert_timeout.disable( coin_insert_timeout_id_ );
+	for(int x=0; x < (coinInserted*2); x++){
+		digitalWrite(output_pins[entity.getSelectedPC().toInt()],!digitalRead(output_pins[entity.getSelectedPC().toInt()]));
+		delay( OUTPUT_DELAY );
+	}
 }
 
 #endif

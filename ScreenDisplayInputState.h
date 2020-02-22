@@ -15,6 +15,7 @@ void display_InputState(){
 		setDisplay(MSG_NORMAL_INPUTSTATE_INPUTHERE, LCDROW1);
 		setDisplay(strSelectedPC_, LCDROW2);
 		isenable_inputState[ENABLE_INDEX] = false;
+		time_out.restartTimer( time_out_id_ );
 	}
 }
 #endif

@@ -14,6 +14,7 @@
 class Settings{
     private:
         int transition_duration_;
+		int timeout_settings_;
         char* cafe_name_;
        
     public:
@@ -41,7 +42,6 @@ class Settings{
 		// -------------------------------------------------------------------------
         char * getCafeNameSetting();
 
-    private:
 		// -------------------------------------------------------------------------
 		// Function name:				setTransitionSettings
 		// Function description: 		setting the transition in maintenance mode
@@ -57,6 +57,9 @@ class Settings{
 		// return type:					char*
 		// -------------------------------------------------------------------------
         char * setCafeNameSetting(char* cafe_name);
+
+		void setTimeOutSettings(int timeOut);
+		int getTimeOutSettings();
 
 };
 

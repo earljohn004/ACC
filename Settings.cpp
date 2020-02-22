@@ -11,8 +11,9 @@
 #include "Settings.h"
 
 Settings::Settings(){
-    setTransitionSetting(2000);
+    setTransitionSetting(1500);
     setCafeNameSetting("MPG Pisonet");
+	setTimeOutSettings(10000);
 }
 
 int Settings::getTransitionSetting(){
@@ -30,3 +31,12 @@ char* Settings::getCafeNameSetting(){
 char* Settings::setCafeNameSetting(char* cafe_name){
     this->cafe_name_ = cafe_name;
 }
+
+int Settings::getTimeOutSettings(){
+    return this->timeout_settings_;
+}
+
+void Settings::setTimeOutSettings(int timeOut){
+    this->timeout_settings_ = timeOut;
+}
+
