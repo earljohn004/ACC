@@ -65,12 +65,24 @@
 // --------------------------------------------------------------
 // VARIABLES FOR STATE MACHINE
 // START
-	enum state_enum { ST_INIT, ST_INPUT, ST_COINSLOT, ST_OUTPUT };
+	enum state_enum { ST_INIT, ST_INPUT, ST_COINSLOT, ST_OUTPUT, ST_SETTINGS1, ST_SETTINGS2 };
 	typedef byte STATE;
 	STATE state = ST_INIT;
 //  END
 // --------------------------------------------------------------
 
+// --------------------------------------------------------------
+// VARIABLES FOR DISPLAY AND MILLIS
+// START
+millisDelay stateScreenDelay[6];
+bool isenableStateDisplay[6][3] = {
+	{ true, false, false },
+	{ true },
+	{ true },
+	{ true }
+};
+//  END
+// --------------------------------------------------------------
 
 // --------------------------------------------------------------
 // VARIABLES for KEYPAD

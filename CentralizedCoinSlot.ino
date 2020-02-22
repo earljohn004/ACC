@@ -9,6 +9,7 @@
 #include "ScreenDisplayInputState.h"
 #include "ScreenDisplayCoinState.h"
 #include "ScreenDisplayOutputState.h"
+#include "ScreenDisplayMaintenanceHome.h"
 
 
 void ISR_coinInsert(){
@@ -23,12 +24,12 @@ void ISR_coinInsert(){
 
 void callback_Timeout(){
 	state = ST_INIT;
-	isenable_InitializeState = true;
+	isenableStateDisplay[ST_INIT][ ENABLE_INDEX ] = true;
 }
 
 void callback_CoinInsertTimeOut(){
 	state = ST_INIT;
-	isenable_InitializeState = true;
+	isenableStateDisplay[ST_INIT][ ENABLE_INDEX ] = true;
 	outputToPC();
 }
 
@@ -41,9 +42,11 @@ void callback_CoinInsertTimeOut(){
 void init_variables(){
 	strSelectedPC_ = "";
 	isAccept  = false;
-	display_InitializeStateEnableFlag[0] = true;
-	display_InitializeStateEnableFlag[1] = false;
-	display_InitializeStateEnableFlag[2] = false;
+	isenableStateDisplay[ST_INIT][0] = true;
+	isenableStateDisplay[ST_INIT][1] = false;
+	isenableStateDisplay[ST_INIT][2] = false;
+    isenableStateDisplay[ST_SETTINGS1][0] = true;
+    isenableStateDisplay[ST_SETTINGS1][1] = false;
 	coinInserted = 0;
 	isTransition = false;
 }
@@ -55,21 +58,25 @@ bool transitionState( STATE &state ){
 		switch(state){
 			case ST_INIT: 
 				state =  ST_INPUT;
-				isenable_InitializeState = false;
+				isenableStateDisplay[ST_INIT][ ENABLE_INDEX ] = false;
 				break;
 			case ST_INPUT:
 				state = ST_COINSLOT;
-				isenable_CoinState[ENABLE_INDEX] = true;
+				isenableStateDisplay[ST_COINSLOT][ENABLE_INDEX] = true;
 				isTransition = false;
 				break;
 			case ST_COINSLOT:
 				state = ST_OUTPUT;
-				isenable_OutputState[ENABLE_INDEX] = true;
+				isenableStateDisplay[ST_OUTPUT][ENABLE_INDEX] = true;
 				break;
 			case ST_OUTPUT:
 				state = ST_INIT;
-				isenable_InitializeState = true;
+				isenableStateDisplay[ST_INIT][ ENABLE_INDEX ] = true;
 				outputToPC();
+				break;
+			case ST_SETTINGS1:
+				state = ST_INIT;
+				isenableStateDisplay[ST_INIT][ENABLE_INDEX] = true;
 				break;
 			default: 
 				break;
@@ -85,22 +92,23 @@ bool transitionState( STATE &state ){
 void state_machine_run(){
     switch(state){
         case ST_INIT:
-			detachInterrupt( INT5 );
 			time_out.disable( time_out_id_ );
 			coin_insert_timeout.disable( coin_insert_timeout_id_ );
-			/* isTransition = false;		//When there is coin insert in INIT STATE: force to false */
-			/* coinInserted = 0; */
 
             if( keyInput_ == KEY_MAINTENANCE ){
 				// Do something here for the transition to 
 				// Maintenance mode
+				state = ST_SETTINGS1;
+				isenableStateDisplay[ST_SETTINGS1][ENABLE_INDEX] = true;
+				/* time_out.disable( time_out_id_ ); */
+				break;
 			}
             else if( keyInput_ ){
 				init_variables();
 				// Pressing any key will transition to next state
 				// Set enable of next screen to true
                 state = ST_INPUT;
-				isenable_inputState[ENABLE_INDEX] = true;
+				isenableStateDisplay[ST_INPUT][ENABLE_INDEX] = true;
 				
 				// Convert the keypad input to String
 				getStringInput();
@@ -113,13 +121,10 @@ void state_machine_run(){
             display_InitializeState();
             break;
         case ST_INPUT:
-			/* isTransition = false;		//When there is coin insert in INIT STATE: force to false */
-			/* coinInserted = 0; */
-
 			if(keyInput_){
 				getStringInput();
 				// Maximum of 2 character inputs only
-				isenable_inputState[ENABLE_INDEX] = true;
+				isenableStateDisplay[ST_INPUT][ENABLE_INDEX] = true;
 			}
 			// Need to process reading of input before updating the display
 			display_InputState();
@@ -137,7 +142,7 @@ void state_machine_run(){
 			//Transition thru interrupt
 			if( isTransition == true ){
                 state = ST_OUTPUT;
-				isenable_OutputState[ENABLE_INDEX] = true;
+				isenableStateDisplay[ST_OUTPUT][ENABLE_INDEX] = true;
 				isTransition == false;
 				lcd.clear();
 
@@ -152,14 +157,25 @@ void state_machine_run(){
 			//isTransition set in ISR
 			if(isTransition == true){
                 state = ST_OUTPUT;
-				isenable_OutputState[ENABLE_INDEX] = true;
+				isenableStateDisplay[ST_OUTPUT][ENABLE_INDEX] = true;
 				isTransition = false;
 			}
 
 			display_OutputState();
 			transitionState(state);
             break;
+		//TODO: version 3 added for Maintenance mode
+		case ST_SETTINGS1:
+			display_MaintenanceHomeState();
+			transitionState(state);
+			break;
     }
+}
+
+void initialize_delay(){
+	for(int x =0; x < 6; x++){
+		stateScreenDelay[x].start( setting.getTransitionSetting() );
+	}
 }
 
 
@@ -168,6 +184,8 @@ void setup() {
   Serial.begin( SERIAL_BAUD );
   lcd.init();
   lcd.backlight();
+
+  init_variables();
 
   // Separate state machine logic on separate thread
   stateThread.onRun(state_machine_run);
@@ -181,10 +199,13 @@ void setup() {
   control.add(&inputThread);
 
   // Initialize screen delays
-  initializeScreenDelay.start( setting.getTransitionSetting() );
-  inputStateScreenDelay.start( setting.getTransitionSetting() );
-  coinStateScreenDelay.start( setting.getTransitionSetting() );
-  outputStateScreenDelay.start( setting.getTransitionSetting() );
+  // Add here when adding new screens
+  /* initializeScreenDelay.start( setting.getTransitionSetting() ); */
+  /* inputStateScreenDelay.start( setting.getTransitionSetting() ); */
+  /* coinStateScreenDelay.start( setting.getTransitionSetting() ); */
+  /* outputStateScreenDelay.start( setting.getTransitionSetting() ); */
+  /* maintenanceHomeScreenDelay.start( setting.getTransitionSetting() ); */
+  initialize_delay();
 
   //Initialize inputs
   initialize_outputs();

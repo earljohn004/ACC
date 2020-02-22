@@ -3,17 +3,15 @@
 
 #include "Common.h"
 
-millisDelay outputStateScreenDelay;
-bool isenable_OutputState[] = { true };
 
 void display_OutputState(){
 
-    if( isenable_OutputState[ENABLE_INDEX] && outputStateScreenDelay.justFinished()){
-	  isenable_OutputState[ENABLE_INDEX] = true;
-      outputStateScreenDelay.repeat();
-      setDisplay(MSG_NORMAL_OUTPUTSTATE_TOTAL,LCDROW1);
+    if( isenableStateDisplay[ST_OUTPUT][ENABLE_INDEX] && stateScreenDelay[ST_OUTPUT].justFinished()){
+	  isenableStateDisplay[ST_OUTPUT][ENABLE_INDEX] = true;
+      stateScreenDelay[ST_OUTPUT].repeat();
+      setDisplay( MSG_NORMAL_OUTPUTSTATE_TOTAL, LCDROW1 );
       setDisplay( String( String(MSG_NORMAL_OUTPUTSTATE_PHP) + coinInserted ),LCDROW2);
-	  isenable_OutputState[ENABLE_INDEX] = true;
+	  isenableStateDisplay[ST_OUTPUT][ENABLE_INDEX] = true;
 	  // coin_insert_timeout.restartTimer( coin_insert_timeout_id_ );
     }
 }
