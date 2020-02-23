@@ -28,6 +28,15 @@
 #define ENABLE_INDEX 0
 #define KEY_ACCEPT '#'
 #define KEY_MAINTENANCE '*'
+#define KEY1 '1'
+#define KEY2 '2'
+#define KEY3 '3'
+#define KEY4 '4'
+#define KEY5 '5'
+#define KEY6 '6'
+#define KEY7 '7'
+#define KEY8 '8'
+#define KEY9 '9'
 
 // Keypad defines ROW Pins
 #define ROW1P1 A8
@@ -51,6 +60,12 @@
 #define THREAD_INTERVAL_STM 50
 #define OUTPUT_DELAY 50
 
+// MAXIMUM VALUES
+#define STR1_TRANSITION 4
+#define STR2_PCNAME_MAX 16
+#define STR_TWODIGIT 2
+#define STR5_PASSCODE_MAX 4
+#define STR7_TIMEOUT_MAX 5
 
 // --------------------------------------------------------------
 // GPIO RELATED FUNCTIONS
@@ -65,22 +80,24 @@
 // --------------------------------------------------------------
 // VARIABLES FOR STATE MACHINE
 // START
-	enum state_enum { ST_INIT, ST_INPUT, ST_COINSLOT, ST_OUTPUT, ST_SETTINGS1, ST_SETTINGS2 };
+	enum state_enum { ST_INIT, ST_INPUT, ST_COINSLOT, ST_OUTPUT, ST_SETTINGS1, ST_SETTINGS2, DUMMY_INPUT };
 	typedef byte STATE;
-	STATE state = ST_INIT;
+	STATE state = ST_SETTINGS1;
 //  END
 // --------------------------------------------------------------
 
 // --------------------------------------------------------------
 // VARIABLES FOR DISPLAY AND MILLIS
 // START
-millisDelay stateScreenDelay[6];
-bool isenableStateDisplay[6][3] = {
-	{ true, false, false },
-	{ true },
-	{ true },
-	{ true }
-};
+	millisDelay stateScreenDelay[6];
+	bool isenableStateDisplay[6][3] = {
+		{ true, false, false },         // Display for ST_INIT
+		{ true },						// Display for ST_INPUT
+		{ true },						// Display for ST_COINSLOT
+		{ true },						// Display for ST_OUTPUT
+		{ true, false },				// Display for ST_SETTINGS1
+		{ true }						// Display for ST_SETTINGS2
+	};
 //  END
 // --------------------------------------------------------------
 
@@ -168,23 +185,6 @@ void setDisplay(String message, int row){
   lcd.print(message);
 }
 
-// -------------------------------------------------------------------------
-// Function name:				getStringInput
-// Function description: 		concatenate the string on key Input
-// Input:						N/A
-// return type:					void
-// -------------------------------------------------------------------------
-void getStringInput(){
-	//Concatenate string when key pressed is not "#"
-	if(keyInput_!= KEY_ACCEPT){
-		if( strSelectedPC_.length() <= 1 ){
-			strSelectedPC_ += String(keyInput_);
-		}
-		else{
-			strSelectedPC_ = String(keyInput_);
-		}
-	}else {/* Do nothing */}
-}
 
 // -------------------------------------------------------------------------
 // Function name:				initialize_outputs
@@ -223,6 +223,24 @@ void outputToPC(){
 		digitalWrite(output_pins[entity.getSelectedPC().toInt()],!digitalRead(output_pins[entity.getSelectedPC().toInt()]));
 		delay( OUTPUT_DELAY );
 	}
+}
+
+// -------------------------------------------------------------------------
+// Function name:				getStringInput
+// Function description: 		concatenate the string on key Input
+// Input:						N/A
+// return type:					void
+// -------------------------------------------------------------------------
+void getStringInput( String &str, int size ){
+	//Concatenate string when key pressed is not "#"
+	if(keyInput_!= KEY_ACCEPT){
+		if( str.length() < size ){
+			str += String(keyInput_);
+		}
+		else{
+			str = String(keyInput_);
+		}
+	}else {/* Do nothing */}
 }
 
 #endif

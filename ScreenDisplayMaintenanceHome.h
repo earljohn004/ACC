@@ -3,9 +3,6 @@
 
 #include "Common.h"
 
-// millisDelay stateScreenDelay[ST_SETTINGS1];
-// bool isenableStateDisplay[ST_SETTINGS1][] = { true, false };
-
 void display_MaintenanceHomeState(){
 
     if( isenableStateDisplay[ST_SETTINGS1][0] && stateScreenDelay[ST_SETTINGS1].justFinished()){

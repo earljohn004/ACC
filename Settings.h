@@ -11,11 +11,16 @@
 #ifndef Settings_h
 #define Settings_h
 
+#include <WString.h>
+
 class Settings{
     private:
         int transition_duration_;
 		int timeout_settings_;
-        char* cafe_name_;
+        String cafe_name_;
+		int max_pc_count_;
+		String passcode_;
+		String fw_version_;
        
     public:
 		// -------------------------------------------------------------------------
@@ -40,7 +45,7 @@ class Settings{
 		// Input:						N/A
 		// return type:					char
 		// -------------------------------------------------------------------------
-        char * getCafeNameSetting();
+        String  getCafeNameSetting();
 
 		// -------------------------------------------------------------------------
 		// Function name:				setTransitionSettings
@@ -56,11 +61,19 @@ class Settings{
 		// Input:						Cafe name
 		// return type:					char*
 		// -------------------------------------------------------------------------
-        char * setCafeNameSetting(char* cafe_name);
+        void setCafeNameSetting(String cafe_name);
 
 		void setTimeOutSettings(int timeOut);
 		int getTimeOutSettings();
 
+		void setMaxPCCountSettings( int num );
+		int getMaxPCCountSettings();
+
+		void setPasscodeSettings(String passcode);
+		String getPasscodeSettings();
+
+		void setFWVersion(String fwversion);
+		String getFWVersion();
 };
 
 #endif

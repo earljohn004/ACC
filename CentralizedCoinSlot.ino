@@ -10,6 +10,7 @@
 #include "ScreenDisplayCoinState.h"
 #include "ScreenDisplayOutputState.h"
 #include "ScreenDisplayMaintenanceHome.h"
+#include "ScreenDisplayMaintenanceSettings.h"
 
 
 void ISR_coinInsert(){
@@ -74,9 +75,18 @@ bool transitionState( STATE &state ){
 				isenableStateDisplay[ST_INIT][ ENABLE_INDEX ] = true;
 				outputToPC();
 				break;
+			//TODO: transition to ST_INIT
 			case ST_SETTINGS1:
 				state = ST_INIT;
 				isenableStateDisplay[ST_INIT][ENABLE_INDEX] = true;
+				break;
+			case ST_SETTINGS2:
+				state = ST_INIT;
+				isenableStateDisplay[ST_INIT][ENABLE_INDEX] = true;
+				break;
+			case DUMMY_INPUT:
+				state = ST_SETTINGS2;
+				isenableStateDisplay[ST_SETTINGS2][ENABLE_INDEX] = true;
 				break;
 			default: 
 				break;
@@ -98,10 +108,9 @@ void state_machine_run(){
             if( keyInput_ == KEY_MAINTENANCE ){
 				// Do something here for the transition to 
 				// Maintenance mode
-				state = ST_SETTINGS1;
 				isenableStateDisplay[ST_SETTINGS1][ENABLE_INDEX] = true;
+				state = ST_SETTINGS1;
 				/* time_out.disable( time_out_id_ ); */
-				break;
 			}
             else if( keyInput_ ){
 				init_variables();
@@ -111,7 +120,8 @@ void state_machine_run(){
 				isenableStateDisplay[ST_INPUT][ENABLE_INDEX] = true;
 				
 				// Convert the keypad input to String
-				getStringInput();
+				/* getStringInput(); */
+				getStringInput(strSelectedPC_,STR_TWODIGIT);
 				
 				//On Transition set time_out enable
 				time_out.enable( time_out_id_ );
@@ -122,7 +132,8 @@ void state_machine_run(){
             break;
         case ST_INPUT:
 			if(keyInput_){
-				getStringInput();
+				/* getStringInput(); */
+				getStringInput(strSelectedPC_,STR_TWODIGIT);
 				// Maximum of 2 character inputs only
 				isenableStateDisplay[ST_INPUT][ENABLE_INDEX] = true;
 			}
@@ -156,8 +167,8 @@ void state_machine_run(){
         case ST_OUTPUT:
 			//isTransition set in ISR
 			if(isTransition == true){
-                state = ST_OUTPUT;
 				isenableStateDisplay[ST_OUTPUT][ENABLE_INDEX] = true;
+                state = ST_OUTPUT;
 				isTransition = false;
 			}
 
@@ -166,8 +177,44 @@ void state_machine_run(){
             break;
 		//TODO: version 3 added for Maintenance mode
 		case ST_SETTINGS1:
+            if( keyInput_ ){
+                state = ST_SETTINGS2;
+				isenableStateDisplay[ST_SETTINGS2][ENABLE_INDEX] = true;
+
+				selectedMNT = keyInput_;
+
+            }
 			display_MaintenanceHomeState();
 			transitionState(state);
+			break;
+		case ST_SETTINGS2:
+
+			if (keyInput_== KEY_MAINTENANCE){
+
+				state = DUMMY_INPUT;
+
+			}else if ( keyInput_ ){
+
+                state = ST_SETTINGS2;
+				isenableStateDisplay[ST_SETTINGS2][ENABLE_INDEX] = true;
+
+				selectedMNT = keyInput_;
+			}
+
+			display_MaintenanceSettingsState();
+			transitionState(state);
+			break;
+		case DUMMY_INPUT:
+			if (keyInput_){
+				// Modify the string in Maintenance mode
+				maintenanceSettingInputLogic();
+				display_MaintenanceSettingsState();
+			}
+			isAccept = transitionState(state);
+			if(isAccept == true){
+				maintenanceSettingAcceptLogic();
+				isAccept = false;
+			}
 			break;
     }
 }
@@ -200,11 +247,6 @@ void setup() {
 
   // Initialize screen delays
   // Add here when adding new screens
-  /* initializeScreenDelay.start( setting.getTransitionSetting() ); */
-  /* inputStateScreenDelay.start( setting.getTransitionSetting() ); */
-  /* coinStateScreenDelay.start( setting.getTransitionSetting() ); */
-  /* outputStateScreenDelay.start( setting.getTransitionSetting() ); */
-  /* maintenanceHomeScreenDelay.start( setting.getTransitionSetting() ); */
   initialize_delay();
 
   //Initialize inputs
