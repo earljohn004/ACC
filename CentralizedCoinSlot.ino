@@ -189,7 +189,7 @@ void state_machine_run(){
 			break;
 		case ST_SETTINGS2:
 
-			if (keyInput_== KEY_MAINTENANCE){
+			if ( keyInput_== KEY_MAINTENANCE ){
 
 				state = DUMMY_INPUT;
 
@@ -205,11 +205,23 @@ void state_machine_run(){
 			transitionState(state);
 			break;
 		case DUMMY_INPUT:
-			if (keyInput_){
+			if (keyInput_ == KEY_ACCEPT){
+				// Center the Cafe name on LCD Screen
+				str2CafeNameSetting_.trim();
+				// reset flag to true
+				key2Initial = true;
+
+			}else if ( keyInput_ == KEY_MAINTENANCE ){
+				// Implement a change in Case
+				// Toggle when key_maintenance is pressed
+				upperCaseFlag = !upperCaseFlag;
+			}
+			 else if ( keyInput_ ){
 				// Modify the string in Maintenance mode
 				maintenanceSettingInputLogic();
 				display_MaintenanceSettingsState();
 			}
+
 			isAccept = transitionState(state);
 			if(isAccept == true){
 				maintenanceSettingAcceptLogic();

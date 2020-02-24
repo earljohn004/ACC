@@ -5,12 +5,62 @@
 
 char selectedMNT = '0';
 String str1TransitionSetting_ = String( setting.getTransitionSetting() );
-String str2CafeNameSetting_ = "MPG Cafe";
+
+// KEY2 related variables start
+String str2CafeNameSetting_ = setting.getCafeNameSetting();
+String str_tmp_current;
+String str_tmp_before;
+bool key2Initial = true;
+char tmpString;
+int counter;
+int columnCounter=0;
+bool upperCaseFlag = true;
+// End
+
 String str3TriggerNum = "";
 String str4MaxPCCount = String ( setting.getMaxPCCountSettings() );
 String str5Passcode = setting.getPasscodeSettings();
 String str7Timeout = String( setting.getTimeOutSettings() );
 String str9FWVersion = setting.getFWVersion() ;
+
+char stringMatrix[ 10 ][ 4 ] = {
+	{ '.','_','-' },		// 1
+	{ 'A','B','C' },		// 2
+	{ 'D','E','F' },		// 3
+	{ 'G','H','I' },		// 4   
+	{ 'J','K','L' },		// 5
+	{ 'M','N','O' },		// 6
+	{ 'P','Q','R', 'S' },	// 7
+	{ 'T','U','V' },		// 8
+	{ 'W','X','Y', 'Z' },	// 9
+	{ ' ' }					// 0
+};
+
+char stringMatrixLC[ 10 ][ 4 ] = {
+	{ '.','_','-' },		// 1
+	{ 'a','b','c' },		// 2
+	{ 'd','e','f' },		// 3
+	{ 'g','h','i' },		// 4   
+	{ 'j','k','l' },		// 5
+	{ 'm','n','o' },		// 6
+	{ 'p','q','r', 's' },	// 7
+	{ 't','u','v' },		// 8
+	{ 'w','x','y', 'z' },	// 9
+	{ ' ' }					// 0
+};
+
+int stringMatrixSize[]{
+	3,					// 1
+	3,					// 2
+	3,					// 3
+	3,					// 4
+	3,					// 5
+	3,					// 6
+	4,					// 7
+	3,					// 8
+	4,					// 9
+	1,					// 0
+};
 
 void display_MaintenanceSettingsState(){
 
@@ -127,8 +177,56 @@ void maintenanceSettingInputLogic(){
 			isenableStateDisplay[ST_SETTINGS2][ENABLE_INDEX] = true;
 		break;
 		case KEY2:
-			getStringInput( str2CafeNameSetting_, STR2_PCNAME_MAX );
 			isenableStateDisplay[ST_SETTINGS2][ENABLE_INDEX] = true;
+
+			// Reset the string on initial open of Cafe name
+			if( key2Initial == true){
+				columnCounter = 0;
+				str2CafeNameSetting_= CAFE_NAME_INIT;
+				key2Initial = false;
+			}
+
+			getStringInput( str_tmp_current, 1 );
+
+			// Check if current keypad input is same with before input
+			// When current input is not equal to before, reset counter to 0
+			if (str_tmp_current != str_tmp_before ){
+				counter = 0;
+			}
+
+			if(upperCaseFlag == true){
+				tmpString = stringMatrix[(str_tmp_current.toInt()-1)][counter];
+			}else{
+				tmpString = stringMatrixLC[(str_tmp_current.toInt()-1)][counter];
+			}
+			counter++;
+			str_tmp_before = str_tmp_current;
+			
+			//Reset the counter when max is achieved
+			if( counter > (stringMatrixSize[(str_tmp_current.toInt()-1)] - 1) ){
+				counter = 0;
+			}
+
+			if( str_tmp_current == KEY_STRING_ACCEPT ){
+				// Increment column Counter of the char array
+				columnCounter++;
+				str2CafeNameSetting_.setCharAt( columnCounter, '_' );
+
+				// When there is white space, delete before character
+				// Counter is incremented and not resetted to 0 when space key 0 is pressed
+				if (counter > 1)
+				{
+					// Delete the _ character before when pressing 0 key multiple times
+					str2CafeNameSetting_.setCharAt( columnCounter-1, ' ' );
+				}
+
+			}
+			else{
+				// If not key accept, concatenate the inputted character 
+				// to the str2CafeNameSetting string
+				str2CafeNameSetting_.setCharAt( columnCounter, tmpString );
+			}
+
 		break;
 		case KEY3:
 			getStringInput( str3TriggerNum, STR_TWODIGIT );

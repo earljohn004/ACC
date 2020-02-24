@@ -66,6 +66,9 @@
 #define STR_TWODIGIT 2
 #define STR5_PASSCODE_MAX 4
 #define STR7_TIMEOUT_MAX 5
+#define CAFE_NAME_INIT "                "
+
+#define KEY_STRING_ACCEPT "0"
 
 // --------------------------------------------------------------
 // GPIO RELATED FUNCTIONS
@@ -240,7 +243,7 @@ void getStringInput( String &str, int size ){
 		else{
 			str = String(keyInput_);
 		}
-	}else {/* Do nothing */}
+	} else {/* Do nothing */}
 }
 
 #endif
